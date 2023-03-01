@@ -3,9 +3,9 @@ cmake_policy(SET CMP0048 NEW)
 project(rslidar_sdk)
 
 #=======================================
-# Custom Point Type (XYZI, XYZIRT)
+# Custom Point Type (XYZI, XYZIRT, XYZIRADT)
 #=======================================
-set(POINT_TYPE XYZI)
+set(POINT_TYPE XYZIRADT)
 
 #=======================================
 # Compile setup (ORIGINAL, CATKIN, COLCON)
@@ -72,6 +72,10 @@ if(${POINT_TYPE} STREQUAL "XYZI")
   add_definitions(-DPOINT_TYPE_XYZI)
 elseif(${POINT_TYPE} STREQUAL "XYZIRT")
   add_definitions(-DPOINT_TYPE_XYZIRT)
+elseif(${POINT_TYPE} STREQUAL "XYZIRADT")
+  add_definitions(-DPOINT_TYPE_XYZIRADT)
+else()
+  message(FATAL_ERROR "POINT_TYPE is not defined ${POINT_TYPE}")
 endif()
 
 message(=============================================================)

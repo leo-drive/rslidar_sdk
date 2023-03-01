@@ -36,7 +36,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef POINT_TYPE_XYZIRT
 typedef PointCloudT<PointXYZIRT> LidarPointCloudMsg;
+#elif POINT_TYPE_XYZIRADT
+typedef PointCloudT<PointXYZIRADT> LidarPointCloudMsg;
 #else
 typedef PointCloudT<PointXYZI> LidarPointCloudMsg;
 #endif
-

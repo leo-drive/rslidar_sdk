@@ -17,5 +17,6 @@ def generate_launch_description():
             node_name='rviz2',
             node_executable='rviz2',
             arguments=['-d',rviz_config]
+            
         )
     ])

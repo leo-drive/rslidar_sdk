@@ -54,6 +54,7 @@ void RSLidarDriver::init()
     this->declare_parameter("input_type", "online");
     this->declare_parameter("msop_port", 6699);
     this->declare_parameter("difop_port", 7788);
+    this->declare_parameter("pcap_path", "");
     this->declare_parameter("point_cloud_topic", "rslidar_points");
 
     this->declare_parameter("send_by_rows", false);
@@ -67,18 +68,21 @@ void RSLidarDriver::init()
     std::string input_type = this->get_parameter("input_type").as_string();
     int msop_port = this->get_parameter("msop_port").as_int();
     int difop_port = this->get_parameter("difop_port").as_int();
+    std::string pcap_path = this->get_parameter("pcap_path").as_string();
     std::string point_cloud_topic = this->get_parameter("point_cloud_topic").as_string();
     send_by_rows_ = this->get_parameter("send_by_rows").as_bool(); 
     bool dense_points = this->get_parameter("dense_points").as_bool(); 
-    std::string frame_id_ = this->get_parameter("frame_id").as_string(); 
+    frame_id_ = this->get_parameter("frame_id").as_string(); 
     // ... get other parameters as needed
 
     // Set driver parameters based on the values from the launch file
     RSDriverParam param;
     param.lidar_type = strToLidarType(lidar_type);
     param.input_type = (input_type == "online") ? InputType::ONLINE_LIDAR : InputType::PCAP_FILE;
+    param.frame_id = frame_id_;
     param.input_param.msop_port = msop_port;
     param.input_param.difop_port = difop_port;
+    param.input_param.pcap_path = pcap_path;
 
     if (dense_points) 
     {
@@ -87,6 +91,7 @@ void RSLidarDriver::init()
     // ... set other parameters as needed
     point_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(point_cloud_topic, rclcpp::SensorDataQoS());
 
+    param.print();
     // Initialize the driver with the parameters
     driver_ptr_.reset(new LidarDriver<LidarPointCloudMsg>());
     driver_ptr_->regPointCloudCallback(std::bind(&RSLidarDriver::getPointCloud, this), 
@@ -115,7 +120,7 @@ void RSLidarDriver::stop()
 inline void RSLidarDriver::sendPointCloud(const LidarPointCloudMsg& msg)
 {
   point_cloud_pub_->publish(toRosMsg(msg, frame_id_, send_by_rows_));
-  RCLCPP_INFO(this->get_logger(), "publish pointcloud");
+  RCLCPP_INFO(this->get_logger(), "publish pointcloud with %s as frame_id", frame_id_.c_str());
 }
 
 

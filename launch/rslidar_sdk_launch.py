@@ -18,7 +18,8 @@ def generate_launch_description():
                     {"input_type": "pcap"},
                     {"msop_port": 5599},
                     {"difop_port": 6688},
-                    {"pcap_path": "/home/alex/robosense/full_campus.pcap"}
+                    {"pcap_path": "/home/alex/robosense/full_campus.pcap"},
+                    {"frame_id": "rslidar"}
                     # ... add other parameters as needed
                 ]
             )

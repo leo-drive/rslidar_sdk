@@ -4,15 +4,15 @@ from launch_ros.descriptions import ComposableNode
 
 def generate_launch_description():
     container = ComposableNodeContainer(
-        node_name='rslidar_sdk_container',
-        node_namespace='',
+        name='rslidar_sdk_container',
+        namespace='',
         package='rclcpp_components',
-        node_executable='component_container',
+        executable='component_container',
         composable_node_descriptions=[
             ComposableNode(
                 package='rslidar_sdk',
-                node_plugin='RSLidarDriver',
-                node_name='rslidar_driver',
+                plugin='robosense::lidar::RSLidarDriver',
+                name='rslidar_driver',
                 parameters=[
                     {"lidar_type": "RSHELIOS"},
                     {"input_type": "pcap"},

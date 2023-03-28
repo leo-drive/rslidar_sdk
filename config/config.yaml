@@ -1,60 +1,42 @@
 common:
-  msg_source: 1                                            #0: not use Lidar
-                                                           #1: packet message comes from online Lidar
-                                                           #2: packet message comes from ROS or ROS2
-                                                           #3: packet message comes from Pcap file
-  send_packet_ros: true                                    #true: Send packets through ROS or ROS2(Used to record packet)
-  send_point_cloud_ros: true                               #true: Send point cloud through ROS or ROS2
-  send_packet_proto: false
-  send_point_cloud_proto: false
+  msg_source: 3                                         #0: not use Lidar
+                                                        #1: packet message comes from online Lidar
+                                                        #2: packet message comes from ROS or ROS2
+                                                        #3: packet message comes from Pcap file
+  send_packet_ros: false                                #true: Send packets through ROS or ROS2(Used to record packet)
+  send_point_cloud_ros: true                            #true: Send point cloud through ROS or ROS2
 lidar:
-  # RS-HELIOS top
   - driver:
-      lidar_type: RSHELIOS                                 #LiDAR type - RS16, RS32, RSBP, RSBPV4, RSHELIOS, RSHELIOS_16P,RS128
-                                                           #RS80, RS48, RSP128, RSP80, RSP48, RSM1, RSM1_JUMBO, RSM2, RSE1
-      msop_port: 2011                                      #Msop port of lidar
-      difop_port: 3011                                     #Difop port of lidar
-      start_angle: 0                                       #Start angle of point cloud
-      end_angle: 360                                       #End angle of point cloud
-      min_distance: 0.2                                    #Minimum distance of point cloud
-      max_distance: 200                                    #Maximum distance of point cloud
-      use_lidar_clock: false                               #True--Use the lidar clock as the message timestamp
-      dense_points: true                                   #False-- Use the system clock as the timestamp
+      lidar_type: RSHELIOS           
+      msop_port: 5599             
+      difop_port: 6688            
+      start_angle: 0              
+      end_angle: 360               
+      min_distance: 0.2            
+      max_distance: 200            
+      use_lidar_clock: false    
+      pcap_path: /home/alex/robosense/full_campus.pcap #The path of pcap file    
     ros:
-      ros_frame_id: rs_helios_top                          #Frame id of packet message and point cloud message
-      ros_recv_packet_topic: top/rslidar_packets           #Topic used to receive lidar packets from ROS
-      ros_send_packet_topic: top/rslidar_packets           #Topic used to send lidar packets through ROS
-      ros_send_point_cloud_topic: top/rslidar_points       #Topic used to send point cloud through ROS
-  # RS-Bpearl left
-  - driver:
-      lidar_type: RSBP
-      msop_port: 2012
-      difop_port: 3012
-      start_angle: 0
-      end_angle: 360
-      min_distance: 0.2
-      max_distance: 200
-      use_lidar_clock: false
-      dense_points: true
-    ros:
-      ros_frame_id: rs_bpearl_left
-      ros_recv_packet_topic: left/rslidar_packets
-      ros_send_packet_topic: left/rslidar_packets
-      ros_send_point_cloud_topic: left/rslidar_points
-  # RS-Bpearl right
-  - driver:
-      lidar_type: RSBP
-      msop_port: 2010
-      difop_port: 3010
-      start_angle: 0
-      end_angle: 360
-      min_distance: 0.2
-      max_distance: 200
-      dense_points: true
-      use_lidar_clock: false
-    ros:
-      ros_frame_id: rs_bpearl_right
-      ros_recv_packet_topic: right/rslidar_packets
-      ros_send_packet_topic: right/rslidar_packets
-      ros_send_point_cloud_topic: right/rslidar_points
-
+      ros_frame_id: rslidar           
+      ros_recv_packet_topic: /rs_helios/rslidar_packets   
+      ros_send_packet_topic: /rs_helios/rslidar_packets    
+      ros_send_point_cloud_topic: /rs_helios/rslidar_points   
+  # - driver:
+  #     lidar_type: RSBP             #LiDAR type - RS16, RS32, RSBP, RSBPV4, RSHELIOS, RSHELIOS_16P, RS128, RS80, RS48, RSP128, RSP80, RSP48, 
+  #                                  #             RSM1, RSM1_JUMBO, RSM2, RSE1
+  #     msop_port: 6699              #Msop port of lidar
+  #     difop_port: 7788             #Difop port of lidar
+  #     start_angle: 0               #Start angle of point cloud
+  #     end_angle: 360               #End angle of point cloud 
+  #     wait_for_difop: true
+  #     min_distance: 0.2            #Minimum distance of point cloud
+  #     max_distance: 200            #Maximum distance of point cloud
+  #     use_lidar_clock: false       #True--Use the lidar clock as the message timestamp
+  #                                  #False-- Use the system clock as the timestamp
+  #     pcap_path: /home/alex/robosense/indoor_bpearl.pcap #The path of pcap file
+  #   ros:
+  #     ros_frame_id: rslidar_left                           #Frame id of packet message and point cloud message
+  #     ros_recv_packet_topic: /rs_bp/left/rslidar_packets          #Topic used to receive lidar packets from ROS
+  #     ros_send_packet_topic: /rs_bp/left/rslidar_packets          #Topic used to send lidar packets through ROS
+  #     ros_send_point_cloud_topic: /rs_bp/left/rslidar_points      #Topic used to send point cloud through ROS 
+  

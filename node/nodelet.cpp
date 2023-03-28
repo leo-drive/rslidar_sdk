@@ -4,6 +4,7 @@
 #include "msg/rs_msg/lidar_point_cloud_msg.hpp"
 
 #include "rs_driver/api/lidar_driver.hpp"
+#include <rs_driver/utility/sync_queue.hpp>
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
@@ -17,7 +18,7 @@ public:
   RSLidarDriver(const rclcpp::NodeOptions & options)
   : Node("rslidar_driver_node", options)
   {
-    onInit();
+    init();
   }
 
   ~RSLidarDriver()
@@ -25,18 +26,21 @@ public:
     stop();
   }
 private:
-  virtual void onInit(void);
+  virtual void init(void);
   virtual void stop(void);
   void sendPointCloud(const LidarPointCloudMsg& msg);
   void exceptionCallback(const Error& code);
+  std::shared_ptr<LidarPointCloudMsg> pointCloudGetCallback(void);
 
   LidarDriver<LidarPointCloudMsg> driver_; ///< driver implementation class
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr point_cloud_pub_;
   std::string frame_id_;
   bool send_by_rows_;
+  SyncQueue<std::shared_ptr<LidarPointCloudMsg>> free_point_cloud_queue_;
+  SyncQueue<std::shared_ptr<LidarPointCloudMsg>> point_cloud_queue_;
 };
 
-void RSLidarDriver::onInit()
+void RSLidarDriver::init()
 {
     // Declare parameters
     this->declare_parameter("lidar_type", "RS16");
@@ -78,7 +82,9 @@ void RSLidarDriver::onInit()
 
     // Initialize the driver with the parameters
     driver_.regExceptionCallback(std::bind(&RSLidarDriver::exceptionCallback, this, std::placeholders::_1));
-    driver_.regPointCloudCallback(pointCloudGetCallback, sendPointCloud);
+    driver_.regPointCloudCallback(std::bind(&RSLidarDriver::pointCloudGetCallback, this),
+     std::bind(&RSLidarDriver::sendPointCloud, this, std::placeholders::_1));
+
     if (!driver_.init(param))
     {
       RCLCPP_ERROR(this->get_logger(), "Driver Initialize Error...");
@@ -92,6 +98,17 @@ void RSLidarDriver::onInit()
 void RSLidarDriver::stop()
 {
   driver_.stop();
+}
+
+inline std::shared_ptr<LidarPointCloudMsg> RSLidarDriver::pointCloudGetCallback(void)
+{
+  std::shared_ptr<LidarPointCloudMsg> point_cloud = free_point_cloud_queue_.pop();
+  if (point_cloud.get() != NULL)
+  {
+    return point_cloud;
+  }
+
+  return std::make_shared<LidarPointCloudMsg>();
 }
 
 inline void RSLidarDriver::sendPointCloud(const LidarPointCloudMsg& msg)
@@ -116,7 +133,7 @@ std::shared_ptr<LidarPointCloudMsg> RSLidarDriver::pointCloudGetCallback(void)
   return std::make_shared<LidarPointCloudMsg>();
 }
 
-inline std::shared_ptr<LidarPointCloudMsg> SourceDriver::getPointCloud(void)
+inline std::shared_ptr<LidarPointCloudMsg> RSLidarDriver::getPointCloud(void)
 {
   std::shared_ptr<LidarPointCloudMsg> point_cloud = free_point_cloud_queue_.pop();
   if (point_cloud.get() != NULL)

@@ -15,14 +15,40 @@ def generate_launch_description():
                 name='rslidar_driver',
                 parameters=[
                     {"lidar_type": "RSHELIOS"},
-                    {"input_type": "pcap"}, # online, pcap
-                    {"msop_port": 5599},
-                    {"difop_port": 6688},
-                    {"pcap_path": "/home/alex/robosense/full_campus.pcap"},
-                    {"frame_id": "rslidar"}
+                    {"input_type": "online"},
+                    {"msop_port": 2011},
+                    {"difop_port": 3011},
+                    {"frame_id": "rs_helios_top"}
+                    # ... add other parameters as needed
+                ]
+            ),
+            ComposableNode(
+                package='rslidar_sdk',
+                plugin='robosense::lidar::RSLidarDriver',
+                name='rslidar_driver',
+                parameters=[
+                    {"lidar_type": "RSBP"},
+                    {"input_type": "online"},
+                    {"msop_port": 2012},
+                    {"difop_port": 3012},
+                    {"frame_id": "rs_bpearl_left"}
+                    # ... add other parameters as needed
+                ]
+            ),
+            ComposableNode(
+                package='rslidar_sdk',
+                plugin='robosense::lidar::RSLidarDriver',
+                name='rslidar_driver',
+                parameters=[
+                    {"lidar_type": "RSBP"},
+                    {"input_type": "online"},
+                    {"msop_port": 2010},
+                    {"difop_port": 3010},
+                    {"frame_id": "rs_bpearl_right"}
                     # ... add other parameters as needed
                 ]
             )
+
         ],
         output='screen',
     )

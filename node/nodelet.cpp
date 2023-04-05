@@ -132,29 +132,54 @@ void RSLidarDriver::init()
     RSDriverParam param;
     param.lidar_type = strToLidarType(lidar_type);
     param.input_type = (input_type == "online") ? InputType::ONLINE_LIDAR : InputType::PCAP_FILE;
+
     param.input_param.msop_port = msop_port;
     param.input_param.difop_port = difop_port;
+    param.input_param.host_address = host_address;
     param.input_param.pcap_path = pcap_path;
-  
+    param.input_param.pcap_rate = pcap_rate;
+    param.input_param.pcap_repeat = pcap_repeat;
+    param.input_param.use_vlan = use_vlan;
+    param.input_param.user_layer_bytes = user_layer_bytes;
+    param.input_param.tail_layer_bytes = tail_layer_bytes;
+
+    param.decoder_param.wait_for_difop = wait_for_difop;
+    param.decoder_param.min_distance = min_distance;
+    param.decoder_param.max_distance = max_distance;
+    param.decoder_param.start_angle = start_angle;
+    param.decoder_param.end_angle = end_angle;
+    //// split frame mode 
+    param.decoder_param.split_angle = split_angle;
+    param.decoder_param.num_blks_split = num_blks_split;
+    param.decoder_param.use_lidar_clock = use_lidar_clock;
+    param.decoder_param.dense_points = dense_points;
+    param.decoder_param.ts_first_point = ts_first_point;
+
+    param.decoder_param.transform_param.x = x;
+    param.decoder_param.transform_param.y = y;
+    param.decoder_param.transform_param.z = z;
+    param.decoder_param.transform_param.roll = roll;
+    param.decoder_param.transform_param.pitch = pitch;
+    param.decoder_param.transform_param.yaw = yaw;
 
     param.frame_id = frame_id_;
-    param.decoder_param.dense_points = dense_points;
 
+    param.print();
 
     if (dense_points) 
     {
       send_by_rows_ = false;
     };
-    // ... set other parameters as needed
-    point_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(point_cloud_topic, rclcpp::SensorDataQoS());
 
-    param.print();
+
     // Initialize the driver with the parameters
     driver_ptr_.reset(new LidarDriver<LidarPointCloudMsg>());
     driver_ptr_->regPointCloudCallback(std::bind(&RSLidarDriver::getPointCloud, this), 
         std::bind(&RSLidarDriver::putPointCloud, this, std::placeholders::_1));
     driver_ptr_->regExceptionCallback(
         std::bind(&RSLidarDriver::exceptionCallback, this, std::placeholders::_1));
+
+    point_cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(point_cloud_topic, rclcpp::SensorDataQoS());
     point_cloud_process_thread_ = std::thread(std::bind(&RSLidarDriver::processPointCloud, this));
 
     if (!driver_ptr_->init(param))
@@ -177,7 +202,7 @@ void RSLidarDriver::stop()
 inline void RSLidarDriver::sendPointCloud(const LidarPointCloudMsg& msg)
 {
   point_cloud_pub_->publish(toRosMsg(msg, frame_id_, send_by_rows_));
-  RCLCPP_INFO(this->get_logger(), "publish pointcloud with %s as frame_id", frame_id_.c_str());
+  // RCLCPP_INFO(this->get_logger(), "publish pointcloud with %s as frame_id", frame_id_.c_str());
 }
 
 

@@ -5,7 +5,7 @@ from launch_ros.descriptions import ComposableNode
 def generate_launch_description():
     container = ComposableNodeContainer(
         name='rslidar_sdk_container',
-        namespace='',
+        namespace='rs_helios',
         package='rclcpp_components',
         executable='component_container',
         composable_node_descriptions=[
@@ -15,7 +15,7 @@ def generate_launch_description():
                 name='rslidar_driver',
                 parameters=[
                     {"lidar_type": "RSHELIOS"},
-                    {"input_type": "pcap"},
+                    {"input_type": "pcap"}, # online, pcap
                     {"msop_port": 5599},
                     {"difop_port": 6688},
                     {"pcap_path": "/home/alex/robosense/full_campus.pcap"},

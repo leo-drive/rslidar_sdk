@@ -49,40 +49,97 @@ private:
 
 void RSLidarDriver::init()
 {
-    // Declare parameters
+    // The lidar parameters
     this->declare_parameter("lidar_type", "RS16");
     this->declare_parameter("input_type", "online");
-    this->declare_parameter("msop_port", 6699);
-    this->declare_parameter("difop_port", 7788);
-    this->declare_parameter("pcap_path", "");
+    // The input parameters 
+    this->declare_parameter("msop_port", 6699);           ///< Msop packet port number
+    this->declare_parameter("difop_port", 7788);          ///< Difop packet port number
+    this->declare_parameter("host_address", "0.0.0.0");   ///< Address of host
+    this->declare_parameter("group_address", "0.0.0.0");  ///< Address of multicast group
+    this->declare_parameter("pcap_path", "");             ///< Absolute path of pcap file
+    this->declare_parameter("pcap_repeat", true);         ///< true: The pcap bag will repeat play
+    this->declare_parameter("pcap_rate", 1.0f);           ///< Rate to read the pcap file
+    this->declare_parameter("use_vlan", false);           ///< Vlan on-off
+    this->declare_parameter("user_layer_bytes", 0);       ///< Bytes of user layer. thers is no user layer if it is 0
+    this->declare_parameter("tail_layer_bytes", 0);       ///< Bytes of tail layer. thers is no tail layer if it is 0
+    // The decoder parameters
+    this->declare_parameter("wait_for_difop", true); ///< true: start sending point cloud until receive difop packet
+    this->declare_parameter("min_distance", 0.0f);   ///< min/max distances of point cloud range. valid if min distance or max distance > 0
+    this->declare_parameter("max_distance", 0.0f);
+    this->declare_parameter("start_angle", 0.0f);    ///< Start angle of point cloud
+    this->declare_parameter("end_angle", 360.0f);    ///< End angle of point cloud
+    // this->declare_parameter("split_frame_mode", "split_by_angle");
+                                 ///< 1: Split frames by split_angle;
+                                 ///< 2: Split frames by fixed number of blocks;
+                                 ///< 3: Split frames by custom number of blocks (num_blks_split)
+    this->declare_parameter("split_angle", 0.0f);       ///< Split angle(degree) used to split frame, only be used when split_frame_mode=1
+    this->declare_parameter("num_blks_split", 1);       ///< Number of packets in one frame, only be used when split_frame_mode=3
+    this->declare_parameter("use_lidar_clock", false);  ///< true: use LiDAR clock as timestamp; false: use system clock as timestamp
+    this->declare_parameter("dense_points", false);     ///< true: discard NAN points; false: reserve NAN points
+    this->declare_parameter("ts_first_point", false);   ///< true: time-stamp point cloud with the first point; false: with the last point;
+    // The point transform parameter
+    this->declare_parameter("x", 0.0f);      ///< unit, m
+    this->declare_parameter("y", 0.0f);      ///< unit, m
+    this->declare_parameter("z", 0.0f);      ///< unit, m
+    this->declare_parameter("roll", 0.0f);   ///< unit, radian
+    this->declare_parameter("pitch", 0.0f);  ///< unit, radian
+    this->declare_parameter("yaw", 0.0f);    ///< unit, radian
+    // The output parameters
     this->declare_parameter("point_cloud_topic", "rslidar_points");
-
-    this->declare_parameter("send_by_rows", false);
-    this->declare_parameter("dense_points", false);
-    this->declare_parameter("frame_id", "rslidar");
+    this->declare_parameter("send_by_rows", false); /// will set to false if dense_points == true
+    this->declare_parameter("frame_id", "rslidar"); ///< The frame id of LiDAR mesage
     
-    // ... declare other parameters as needed
-
     // Get parameters
     std::string lidar_type = this->get_parameter("lidar_type").as_string();
     std::string input_type = this->get_parameter("input_type").as_string();
+
     int msop_port = this->get_parameter("msop_port").as_int();
     int difop_port = this->get_parameter("difop_port").as_int();
+    std::string host_address = this->get_parameter("host_address").as_string();
+    std::string group_address = this->get_parameter("group_address").as_string();
     std::string pcap_path = this->get_parameter("pcap_path").as_string();
+    double pcap_rate = this->get_parameter("pcap_rate").as_double();
+    bool pcap_repeat = this->get_parameter("pcap_repeat").as_bool();
+    bool use_vlan = this->get_parameter("use_vlan").as_bool();
+    int user_layer_bytes = this->get_parameter("user_layer_bytes").as_int();
+    int tail_layer_bytes = this->get_parameter("tail_layer_bytes").as_int();
+
+    bool wait_for_difop = this->get_parameter("wait_for_difop").as_bool();
+    double min_distance = this->get_parameter("min_distance").as_double();
+    double max_distance = this->get_parameter("max_distance").as_double();
+    double start_angle = this->get_parameter("start_angle").as_double();
+    double end_angle = this->get_parameter("end_angle").as_double();
+    // std::string split_frame_mode = this->get_parameter("split_frame_mode").as_string();
+    double split_angle = this->get_parameter("split_angle").as_double();
+    int num_blks_split = this->get_parameter("num_blks_split").as_int();
+    bool use_lidar_clock = this->get_parameter("use_lidar_clock").as_bool();
+    bool dense_points = this->get_parameter("dense_points").as_bool(); 
+    bool ts_first_point = this->get_parameter("ts_first_point").as_bool();
+
+    double x = this->get_parameter("x").as_double();      
+    double y = this->get_parameter("y").as_double();      
+    double z = this->get_parameter("z").as_double();      
+    double roll = this->get_parameter("roll").as_double();   
+    double pitch = this->get_parameter("pitch").as_double();  
+    double yaw = this->get_parameter("yaw").as_double();    
+  
     std::string point_cloud_topic = this->get_parameter("point_cloud_topic").as_string();
     send_by_rows_ = this->get_parameter("send_by_rows").as_bool(); 
-    bool dense_points = this->get_parameter("dense_points").as_bool(); 
     frame_id_ = this->get_parameter("frame_id").as_string(); 
-    // ... get other parameters as needed
 
     // Set driver parameters based on the values from the launch file
     RSDriverParam param;
     param.lidar_type = strToLidarType(lidar_type);
     param.input_type = (input_type == "online") ? InputType::ONLINE_LIDAR : InputType::PCAP_FILE;
-    param.frame_id = frame_id_;
     param.input_param.msop_port = msop_port;
     param.input_param.difop_port = difop_port;
     param.input_param.pcap_path = pcap_path;
+  
+
+    param.frame_id = frame_id_;
+    param.decoder_param.dense_points = dense_points;
+
 
     if (dense_points) 
     {

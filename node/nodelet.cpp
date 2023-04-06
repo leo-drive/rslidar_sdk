@@ -69,7 +69,7 @@ void RSLidarDriver::init()
     this->declare_parameter("max_distance", 0.0f);
     this->declare_parameter("start_angle", 0.0f);    ///< Start angle of point cloud
     this->declare_parameter("end_angle", 360.0f);    ///< End angle of point cloud
-    // this->declare_parameter("split_frame_mode", "split_by_angle");
+    this->declare_parameter("split_frame_mode", "split_by_angle");
                                  ///< 1: Split frames by split_angle;
                                  ///< 2: Split frames by fixed number of blocks;
                                  ///< 3: Split frames by custom number of blocks (num_blks_split)
@@ -110,7 +110,7 @@ void RSLidarDriver::init()
     double max_distance = this->get_parameter("max_distance").as_double();
     double start_angle = this->get_parameter("start_angle").as_double();
     double end_angle = this->get_parameter("end_angle").as_double();
-    // std::string split_frame_mode = this->get_parameter("split_frame_mode").as_string();
+    std::string split_frame_mode = this->get_parameter("split_frame_mode").as_string();
     double split_angle = this->get_parameter("split_angle").as_double();
     int num_blks_split = this->get_parameter("num_blks_split").as_int();
     bool use_lidar_clock = this->get_parameter("use_lidar_clock").as_bool();
@@ -149,6 +149,16 @@ void RSLidarDriver::init()
     param.decoder_param.start_angle = start_angle;
     param.decoder_param.end_angle = end_angle;
     //// split frame mode 
+    if (split_frame_mode == "split_by_angle") {
+      param.decoder_param.split_frame_mode = SplitFrameMode::SPLIT_BY_ANGLE;
+    } else if (split_frame_mode == "split_by_fixed_blks") {
+      param.decoder_param.split_frame_mode = SplitFrameMode::SPLIT_BY_FIXED_BLKS;
+    } else if (split_frame_mode == "split_by_custom_blks") {
+      param.decoder_param.split_frame_mode = SplitFrameMode::SPLIT_BY_CUSTOM_BLKS;
+    } else {
+      RCLCPP_ERROR(this->get_logger(), "Driver Config Error. Unknown split frame mode.");
+      throw std::runtime_error("Driver Config Error.");
+    }
     param.decoder_param.split_angle = split_angle;
     param.decoder_param.num_blks_split = num_blks_split;
     param.decoder_param.use_lidar_clock = use_lidar_clock;
@@ -184,8 +194,8 @@ void RSLidarDriver::init()
 
     if (!driver_ptr_->init(param))
     {
-      RCLCPP_ERROR(this->get_logger(), "Driver Initialize Error...");
-      throw std::runtime_error("Driver Initialize Error");
+      RCLCPP_ERROR(this->get_logger(), "Driver Initialize Error.");
+      throw std::runtime_error("Driver Initialize Error.");
     }
 
     // Start the driver
@@ -241,7 +251,7 @@ inline std::shared_ptr<LidarPointCloudMsg> RSLidarDriver::getPointCloud(void)
 void RSLidarDriver::exceptionCallback(const Error& code)
 {
   code.toString();
-  // RCLCPP_WARN(this->get_logger(), code.toString());
+  RCLCPP_WARN(this->get_logger(), code.toString().c_str());
 }
 
 } // namespace robosense::lidar

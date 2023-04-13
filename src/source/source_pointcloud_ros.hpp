@@ -184,7 +184,7 @@ inline void DestinationPointCloudRos::init(const YAML::Node& config)
 
   std::string ros_send_topic;
   yamlRead<std::string>(config["ros"], 
-      "ros_send_point_cloud_topic", ros_send_topic, "rslidar_points");
+      "ros_send_point_cloud_topic", ros_send_topic, "pointcloud_raw");
 
   nh_ = std::unique_ptr<ros::NodeHandle>(new ros::NodeHandle());
   pub_ = nh_->advertise<sensor_msgs::PointCloud2>(ros_send_topic, 10);

@@ -86,7 +86,7 @@ void RSLidarDriver::init()
     this->declare_parameter("pitch", 0.0f);  ///< unit, radian
     this->declare_parameter("yaw", 0.0f);    ///< unit, radian
     // The output parameters
-    this->declare_parameter("point_cloud_topic", "rslidar_points");
+    this->declare_parameter("point_cloud_topic", "pointcloud_raw");
     this->declare_parameter("send_by_rows", false); /// will set to false if dense_points == true
     this->declare_parameter("frame_id", "rslidar"); ///< The frame id of LiDAR mesage
     
